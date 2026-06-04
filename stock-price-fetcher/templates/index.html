@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Stock Analyzer Pro</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- Header -->
+    <div class="header">
+        <h1>📈 AI Stock Analyzer Pro</h1>
+        <p>Real time analysis • AI Chat • Portfolio • Alerts • Telugu Voice</p>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs">
+        <button class="tab active" onclick="showTab('analyze')">📊 Analyze</button>
+        <button class="tab" onclick="showTab('chat')">🤖 AI Chat</button>
+        <button class="tab" onclick="showTab('portfolio')">💼 Portfolio</button>
+        <button class="tab" onclick="showTab('alerts')">🔔 Alerts</button>
+    </div>
+
+    <!-- ========== ANALYZE TAB ========== -->
+    <div id="tab-analyze" class="tab-content active">
+
+        <div class="search-box">
+            <input type="text" id="stock-input"
+                placeholder="Enter stock (e.g. RELIANCE.NS, TCS.NS, AAPL)"
+            />
+            <button onclick="analyzeStock()">Analyze 🚀</button>
+        </div>
+
+        <div class="quick-stocks">
+            <span>Quick:</span>
+            <button onclick="quickSearch('RELIANCE.NS')">Reliance</button>
+            <button onclick="quickSearch('TCS.NS')">TCS</button>
+            <button onclick="quickSearch('INFY.NS')">Infosys</button>
+            <button onclick="quickSearch('HDFCBANK.NS')">HDFC</button>
+            <button onclick="quickSearch('AAPL')">Apple</button>
+        </div>
+
+        <div id="loading" class="loading" style="display:none;">⏳ Analyzing...</div>
+        <div id="error" class="error-box" style="display:none;"></div>
+
+        <div id="results" style="display:none;">
+            <div class="company-card">
+                <h2 id="company-name"></h2>
+                <span id="symbol-badge"></span>
+            </div>
+
+            <div class="cards-grid">
+                <div class="card">
+                    <p>Current Price</p>
+                    <h3 id="current-price"></h3>
+                </div>
+                <div class="card">
+                    <p>Change</p>
+                    <h3 id="price-change"></h3>
+                </div>
+                <div class="card">
+                    <p>1M High</p>
+                    <h3 id="high-price"></h3>
+                </div>
+                <div class="card">
+                    <p>1M Low</p>
+                    <h3 id="low-price"></h3>
+                </div>
+                <div class="card">
+                    <p>Average</p>
+                    <h3 id="avg-price"></h3>
+                </div>
+                <div class="card">
+                    <p>Volume</p>
+                    <h3 id="volume"></h3>
+                </div>
+            </div>
+
+            <div class="signal-box" id="signal-box">
+                <h2 id="signal-text"></h2>
+                <p id="signal-reason"></p>
+            </div>
+
+            <div class="chart-box">
+                <h3>📊 30 Day Price Chart</h3>
+                <canvas id="priceChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== CHAT TAB ========== -->
+    <div id="tab-chat" class="tab-content">
+
+        <div class="chat-header">
+            <h3>🤖 AI Stock & Finance Assistant</h3>
+            <div class="lang-toggle">
+                <button id="lang-en" class="lang-btn active" onclick="setLanguage('english')">English</button>
+                <button id="lang-te" class="lang-btn" onclick="setLanguage('telugu')">తెలుగు</button>
+            </div>
+        </div>
+
+        <div id="chat-box" class="chat-box">
+            <div class="bot-msg">
+                👋 Hello! I can help you with stocks and finance!
+                <br>తెలుగులో కూడా అడగవచ్చు! 🙂
+            </div>
+        </div>
+
+        <div class="chat-input-area">
+            <button id="voice-btn" onclick="startVoice()" title="Voice Input">🎤</button>
+            <input type="text" id="chat-input"
+                placeholder="Ask anything about stocks or finance..."
+                onkeypress="if(event.key==='Enter') sendChat()"
+            />
+            <button onclick="sendChat()">Send 🚀</button>
+        </div>
+
+        <div id="voice-status" class="voice-status" style="display:none;">
+            🎤 Listening... speak now!
+        </div>
+
+        <div class="quick-questions">
+            <span>Quick ask:</span>
+            <button onclick="quickAsk('What is PE ratio?')">PE Ratio?</button>
+            <button onclick="quickAsk('How to start investing?')">Start investing?</button>
+            <button onclick="quickAsk('What is SIP?')">What is SIP?</button>
+            <button onclick="quickAsk('Explain mutual funds')">Mutual Funds?</button>
+        </div>
+    </div>
+
+    <!-- ========== PORTFOLIO TAB ========== -->
+    <div id="tab-portfolio" class="tab-content">
+
+        <h3 style="margin-bottom:20px;">💼 My Portfolio</h3>
+
+        <div class="portfolio-form">
+            <input type="text" id="p-symbol" placeholder="Stock Symbol (e.g. TCS.NS)" />
+            <input type="number" id="p-quantity" placeholder="Quantity" />
+            <input type="number" id="p-price" placeholder="Buy Price (₹)" />
+            <button onclick="addToPortfolio()">Add Stock ➕</button>
+        </div>
+
+        <div id="portfolio-summary" style="display:none;">
+            <div class="cards-grid">
+                <div class="card">
+                    <p>Total Invested</p>
+                    <h3 id="total-invested"></h3>
+                </div>
+                <div class="card">
+                    <p>Current Value</p>
+                    <h3 id="total-value"></h3>
+                </div>
+                <div class="card">
+                    <p>Total P&L</p>
+                    <h3 id="total-pnl"></h3>
+                </div>
+            </div>
+        </div>
+
+        <div id="portfolio-list"></div>
+    </div>
+
+    <!-- ========== ALERTS TAB ========== -->
+    <div id="tab-alerts" class="tab-content">
+
+        <h3 style="margin-bottom:20px;">🔔 Price Alerts</h3>
+
+        <div class="alert-form">
+            <input type="text" id="a-symbol" placeholder="Stock Symbol" />
+            <input type="number" id="a-price" placeholder="Target Price (₹)" />
+            <select id="a-type">
+                <option value="above">Price Goes Above ⬆️</option>
+                <option value="below">Price Goes Below ⬇️</option>
+            </select>
+            <button onclick="addAlert()">Set Alert 🔔</button>
+        </div>
+
+        <button class="check-btn" onclick="checkAlerts()">
+            🔄 Check All Alerts
+        </button>
+
+        <div id="alerts-list"></div>
+        <div id="triggered-alerts"></div>
+    </div>
+
+</div>
+
+<script>
+
+// ========== TAB SYSTEM ==========
+function showTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    event.target.classList.add('active');
+}
+
+// ========== LANGUAGE ==========
+let currentLang = 'english';
+function setLanguage(lang) {
+    currentLang = lang;
+    document.getElementById('lang-en').classList.toggle('active', lang === 'english');
+    document.getElementById('lang-te').classList.toggle('active', lang === 'telugu');
+    const input = document.getElementById('chat-input');
+    input.placeholder = lang === 'telugu' ? 
+        'స్టాక్స్ గురించి అడగండి...' : 
+        'Ask anything about stocks or finance...';
+}
+
+// ========== VOICE INPUT ==========
+let recognition = null;
+
+function startVoice() {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        alert('Voice not supported in this browser! Use Chrome.');
+        return;
+    }
+
+    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = currentLang === 'telugu' ? 'te-IN' : 'en-IN';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    document.getElementById('voice-status').style.display = 'block';
+    document.getElementById('voice-btn').style.background = '#ff4444';
+
+    recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById('chat-input').value = transcript;
+        document.getElementById('voice-status').style.display = 'none';
+        document.getElementById('voice-btn').style.background = '#00ff88';
+        sendChat();
+    };
+
+    recognition.onerror = () => {
+        document.getElementById('voice-status').style.display = 'none';
+        document.getElementById('voice-btn').style.background = '#00ff88';
+    };
+
+    recognition.onend = () => {
+        document.getElementById('voice-status').style.display = 'none';
+        document.getElementById('voice-btn').style.background = '#00ff88';
+    };
+
+    recognition.start();
+}
+
+// ========== AI VOICE OUTPUT ==========
+function speakResponse(text) {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = currentLang === 'telugu' ? 'te-IN' : 'en-IN';
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+    window.speechSynthesis.speak(utterance);
+}
+
+// ========== CHAT ==========
+async function sendChat() {
+    const input = document.getElementById('chat-input');
+    const chatBox = document.getElementById('chat-box');
+    const message = input.value.trim();
+    if (!message) return;
+
+    chatBox.innerHTML += `<div class="user-msg">${message}</div>`;
+    input.value = '';
+
+    chatBox.innerHTML += `<div class="bot-msg" id="chat-loading">⏳ Thinking...</div>`;
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    const response = await fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message, language: currentLang })
+    });
+
+    const data = await response.json();
+    document.getElementById('chat-loading')?.remove();
+
+    const botMsg = data.response || data.error;
+    chatBox.innerHTML += `
+        <div class="bot-msg">
+            🤖 ${botMsg}
+            <button class="speak-btn" onclick="speakResponse(\`${botMsg.replace(/`/g, '')}\`)">
+                🔊 Listen
+            </button>
+        </div>`;
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function quickAsk(question) {
+    document.getElementById('chat-input').value = question;
+    sendChat();
+}
+
+// ========== STOCK ANALYZE ==========
+let chart = null;
+
+function quickSearch(symbol) {
+    showTab('analyze');
+    document.getElementById('stock-input').value = symbol;
+    analyzeStock();
+}
+
+async function analyzeStock() {
+    const symbol = document.getElementById('stock-input').value.trim();
+    if (!symbol) return;
+
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('error').style.display = 'none';
+
+    const response = await fetch('/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ symbol })
+    });
+
+    const data = await response.json();
+    document.getElementById('loading').style.display = 'none';
+
+    if (data.error) {
+        document.getElementById('error').style.display = 'block';
+        document.getElementById('error').innerText = '❌ ' + data.error;
+        return;
+    }
+
+    const signalColors = { 'BUY': '#00ff88', 'SELL': '#ff4444', 'HOLD': '#ffaa00' };
+
+    document.getElementById('company-name').innerText = data.company;
+    document.getElementById('symbol-badge').innerText = data.symbol;
+    document.getElementById('current-price').innerText = '₹' + data.current_price;
+
+    const changeEl = document.getElementById('price-change');
+    changeEl.innerText = data.change + ' (' + data.change_pct + '%)';
+    changeEl.style.color = data.change >= 0 ? '#00ff88' : '#ff4444';
+
+    document.getElementById('high-price').innerText = '₹' + data.high;
+    document.getElementById('low-price').innerText = '₹' + data.low;
+    document.getElementById('avg-price').innerText = '₹' + data.avg;
+    document.getElementById('volume').innerText = Number(data.volume).toLocaleString();
+
+    const signalBox = document.getElementById('signal-box');
+    signalBox.style.borderColor = signalColors[data.signal];
+    signalBox.style.background = signalColors[data.signal] + '11';
+    document.getElementById('signal-text').innerText =
+        data.signal === 'BUY' ? '🟢 BUY' :
+        data.signal === 'SELL' ? '🔴 SELL' : '🟡 HOLD';
+    document.getElementById('signal-text').style.color = signalColors[data.signal];
+    document.getElementById('signal-reason').innerText = data.reason;
+
+    if (chart) chart.destroy();
+    const ctx = document.getElementById('priceChart').getContext('2d');
+    chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.dates,
+            datasets: [{
+                label: 'Price',
+                data: data.prices,
+                borderColor: signalColors[data.signal],
+                backgroundColor: signalColors[data.signal] + '22',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { ticks: { color: '#aaa' }, grid: { color: '#222' } },
+                y: { ticks: { color: '#aaa' }, grid: { color: '#222' } }
+            }
+        }
+    });
+
+    document.getElementById('results').style.display = 'block';
+}
+
+// ========== PORTFOLIO ==========
+async function addToPortfolio() {
+    const symbol = document.getElementById('p-symbol').value.trim();
+    const quantity = document.getElementById('p-quantity').value;
+    const buyPrice = document.getElementById('p-price').value;
+
+    if (!symbol || !quantity || !buyPrice) {
+        alert('Please fill all fields!');
+        return;
+    }
+
+    const response = await fetch('/portfolio/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ symbol, quantity, buy_price: buyPrice })
+    });
+
+    const data = await response.json();
+    if (data.error) { alert(data.error); return; }
+
+    document.getElementById('p-symbol').value = '';
+    document.getElementById('p-quantity').value = '';
+    document.getElementById('p-price').value = '';
+
+    loadPortfolio();
+}
+
+async function loadPortfolio() {
+    const response = await fetch('/portfolio/get');
+    const data = await response.json();
+
+    if (data.stocks.length === 0) return;
+
+    document.getElementById('portfolio-summary').style.display = 'block';
+    document.getElementById('total-invested').innerText = '₹' + data.total_invested;
+    document.getElementById('total-value').innerText = '₹' + data.total_value;
+
+    const pnlEl = document.getElementById('total-pnl');
+    pnlEl.innerText = '₹' + data.total_pnl + ' (' + data.total_pnl_pct + '%)';
+    pnlEl.style.color = data.total_pnl >= 0 ? '#00ff88' : '#ff4444';
+
+    const list = document.getElementById('portfolio-list');
+    list.innerHTML = data.stocks.map(s => `
+        <div class="portfolio-item">
+            <div class="p-left">
+                <strong>${s.symbol}</strong>
+                <span>${s.quantity} shares @ ₹${s.buy_price}</span>
+            </div>
+            <div class="p-right">
+                <span>₹${s.current_price}</span>
+                <span style="color:${s.pnl >= 0 ? '#00ff88' : '#ff4444'}">
+                    ${s.pnl >= 0 ? '+' : ''}₹${s.pnl} (${s.pnl_pct}%)
+                </span>
+            </div>
+            <button class="remove-btn" onclick="removeStock('${s.symbol}')">✕</button>
+        </div>
+    `).join('');
+}
+
+async function removeStock(symbol) {
+    await fetch('/portfolio/remove', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ symbol })
+    });
+    loadPortfolio();
+}
+
+// ========== ALERTS ==========
+async function addAlert() {
+    const symbol = document.getElementById('a-symbol').value.trim();
+    const price = document.getElementById('a-price').value;
+    const type = document.getElementById('a-type').value;
+
+    if (!symbol || !price) { alert('Please fill all fields!'); return; }
+
+    const response = await fetch('/alerts/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ symbol, target_price: price, alert_type: type })
+    });
+
+    const data = await response.json();
+    renderAlerts(data.alerts);
+
+    document.getElementById('a-symbol').value = '';
+    document.getElementById('a-price').value = '';
+}
+
+async function checkAlerts() {
+    const response = await fetch('/alerts/check');
+    const data = await response.json();
+
+    renderAlerts(data.all_alerts);
+
+    if (data.triggered.length > 0) {
+        const triggeredDiv = document.getElementById('triggered-alerts');
+        triggeredDiv.innerHTML = `
+            <div class="triggered-box">
+                <h4>🚨 Triggered Alerts!</h4>
+                ${data.triggered.map(a => `
+                    <p>${a.symbol} hit ₹${a.current_price} 
+                    (Target: ₹${a.target_price} ${a.alert_type})</p>
+                `).join('')}
+            </div>`;
+    }
+}
+
+function renderAlerts(alertsList) {
+    const list = document.getElementById('alerts-list');
+    list.innerHTML = alertsList.map(a => `
+        <div class="alert-item ${a.status}">
+            <span>📊 ${a.symbol}</span>
+            <span>₹${a.target_price}</span>
+            <span>${a.alert_type === 'above' ? '⬆️ Above' : '⬇️ Below'}</span>
+            <span class="alert-status">${a.status === 'active' ? '🟢 Active' : '✅ Triggered'}</span>
+        </div>
+    `).join('');
+}
+
+// Enter key for stock input
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('stock-input')
+        .addEventListener('keypress', e => {
+            if (e.key === 'Enter') analyzeStock();
+        });
+    loadPortfolio();
+});
+
+</script>
+</body>
+</html>
